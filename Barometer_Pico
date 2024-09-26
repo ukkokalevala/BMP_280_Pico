@@ -1,0 +1,66 @@
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BMP280.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128  // Adjust as necessary
+#define SCREEN_HEIGHT 64   // Adjust as necessary
+#define OLED_ADDRESS 0x3C  // Change to your OLED's address if different
+
+Adafruit_BMP280 bmp; 
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1); // Use default reset pin
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial); // Wait for Serial Monitor to open
+  
+  // Initialize the display
+  display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS); // Correct initialization
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  
+  // Initialize I2C
+  Wire.begin(); 
+
+  // Initialize BMP280 sensor with the correct I2C address
+  if (!bmp.begin(0x77)) { // Use 0x77 as found
+    Serial.println(F("Could not find BMP280 sensor, check wiring!"));
+    display.println("Sensor not found!");
+    display.display();
+    while (1); // Halt if initialization fails
+  }
+  Serial.println(F("BMP280 initialized successfully!"));
+}
+
+void loop() {
+  // Read temperature, pressure, and altitude
+  float temperature = bmp.readTemperature();
+  float pressure = bmp.readPressure() / 100.0F; // Convert Pa to hPa
+  float altitude = bmp.readAltitude(1013.25);    // Adjust as necessary for your location
+
+  // Clear the display
+  display.clearDisplay();
+  
+  // Print values on the display
+  display.setCursor(0, 0);
+  display.print("Temp: ");
+  display.print(temperature);
+  display.println(" C");
+  
+  display.print("Pressure: ");
+  display.print(pressure);
+  display.println(" hPa");
+  
+  display.print("Altitude: ");
+  display.print(altitude);
+  display.println(" m");
+  
+  // Display the updated values
+  display.display();
+  
+  // Add a small delay before the next reading
+  delay(2000);  // 2 second delay
+}
